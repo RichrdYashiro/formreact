@@ -1,90 +1,69 @@
-import { useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import * as yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
 
 import "./App.css";
-
+const FormData = (formsInfo) => {
+	console.log(formsInfo);
+};
 function App() {
-	const [login, setLogin] = useState("");
-	const [password, setPassword] = useState("");
-	const [passwordRepeat, setPasswordRepeat] = useState("");
-	const [loginError, setLoginError] = useState(null);
-	const [passError, setError] = useState(null);
+	const fieldsSchema = yup.object().shape({
+		login: yup
+			.string()
+			.matches(
+				/^[\w_]*$/,
+				"Неверный логин. Допустимые символы: буквы, цифры и нижнее подчёркивание"
+			)
+			.min(3, "Неверный логин. Должно быть не меньше 3 символов")
+			.max(12, "Неверный логин. Должно быть не больше 12 символов"),
+		password: yup
+			.string()
+			.matches(
+				/^[\w_]*$/,
+				"Допустимые символы: буквы, цифры и нижнее подчёркивание"
+			),
+		passwordRepeat: yup
+			.string()
+			.matches(
+				/^[\w_]*$/,
+				"Допустимые символы: буквы, цифры и нижнее подчёркивание"
+			),
+	});
 
-	const submitButtonRef = useRef(null);
-
-	let error = null;
-
-	const onLoginChange = ({ target }) => {
-		setLogin(target.value);
-
-		if (!/^[\w]*$/.test(target.value)) {
-			error = "Допустимые символы: буквы, цифры";
-		} else if (target.value.length > 12) {
-			error = "Должно быть не больше 12 символов";
-		}
-		setLoginError(error);
-	};
-
-	const onPassChange = ({ target }) => {
-		setPassword(target.value);
-		if (!/^[\w]*$/.test(target.value)) {
-			setError("Допустимые символы: буквы, цифры");
-		} else {
-			setError(null);
-		}
-	};
-
-	const onPassRepChange = ({ target }) => {
-		const newPasswordRepeat = target.value;
-		setPasswordRepeat(newPasswordRepeat);
-
-		if (newPasswordRepeat === password && newPasswordRepeat.length > 0) {
-			setTimeout(() => {
-				submitButtonRef.current?.focus();
-			}, 0);
-			setError(null);
-		} else if (newPasswordRepeat.length > 0 && password.length > 0) {
-			setError("Пароли не совпадают");
-		} else {
-			setError(null);
-		}
-	};
-
-	function onSubmit(event) {
-		event.preventDefault();
-
-		if (!loginError && !passError && password === passwordRepeat) {
-			console.log({ login }, { password }, { passwordRepeat });
-		} else {
-			if (password !== passwordRepeat && !passError) {
-				setError("Пароли не совпадают");
-			}
-		}
-	}
-
+	const {
+		register,
+		handleSubmit,
+		formState: { errors },
+	} = useForm({
+		defaultValues: {
+			login: "",
+		},
+		resolver: yupResolver(fieldsSchema),
+	});
 	return (
 		<>
-			<form onSubmit={onSubmit}>
+			<form onSubmit={handleSubmit(FormData)}>
 				{loginError && <div>{loginError}</div>}
 				{passError && <div>{passError}</div>}
 				<div>
 					Логин
-					<input type="text" value={login} onChange={onLoginChange} />
+					<input type="text" name="login" {...register("login")} />
 				</div>
 
 				<div>
 					Пароль
 					<input
+						name="password"
 						type="password"
-						value={password}
-						onChange={onPassChange}
+						{...password("login")}
 					/>
 				</div>
 				<div>
 					Повтор пароля
 					<input
 						type="password"
-						value={passwordRepeat}
-						onChange={onPassRepChange}
+						name="passwordRepeat"
+						{...passwordRepeat("login")}
 					/>
 				</div>
 				<button
