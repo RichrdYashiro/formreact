@@ -1,43 +1,69 @@
-import { createElement, useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
+import { useRef, useState } from "react";
+
 import "./App.css";
 
-//декларативный
 function App() {
-	//императивный
-	const [count, setCount] = useState(0);
-	//декларативный
-	const currentYear = createElement(
-		"p",
-		{ className: "read-the-docs" },
-		`${new Date().getFullYear()}`
-	);
+	const [login, setLogin] = useState("");
+	const [password, setPassword] = useState("");
+	const [passwordRepeat, setPasswordRepeat] = useState("");
+	const [loginError, setLoginError] = useState(null);
+	const [passError, setError] = useState(null);
+
+	const submitButtonRef = useRef(null);
+
+	let error = null;
+
+	const onLoginChange = ({ target }) => {
+		setLogin(target.value);
+
+		if (!/^[\w]*$/.test(target.value)) {
+			error = "Допустимые символы: буквы, цифры";
+		} else if (target.value.length > 12) {
+			error = "Должно быть не больше 12 символов";
+		}
+	};
+
+	const onPassBlur = ({ target }) => {
+		setPassword(target.value);
+
+		if (!/^[\w]*$/.test(target.value)) {
+			error = "Допустимые символы: буквы, цифры";
+		}
+		setError(null);
+	};
+
+	const onPassRepBlur = ({ target }) => {
+		setPasswordRepeat(target.value);
+		setError(null);
+	};
+
+	function onSubmit(event) {
+		event.preventDefault();
+
+		if (password === passwordRepeat) {
+			console.log({ login }, { password }, { passwordRepeat });
+		} else {
+			error = "не подходят пароли";
+			setError(error);
+		}
+	}
+
 	return (
 		<>
-			<div>
-				<a href="https://vite.dev" target="_blank">
-					<img src={viteLogo} className="logo" alt="Vite logo" />
-				</a>
-				<a href="https://react.dev" target="_blank">
-					<img
-						src={reactLogo}
-						className="logo react"
-						alt="React logo"
-					/>
-				</a>
-			</div>
-			<h1>Vite + React</h1>
-			<div className="card">
-				//императивный
-				<button onClick={() => setCount((count) => count + 1)}>
-					count is {count}
+			<form onSubmit={onSubmit}>
+				{loginError && <div>{loginError}</div>}
+				{passError && <div>{passError}</div>}
+				<input type="text" value={login} onChange={onLoginChange} />
+				<input type="password" value={password} onChange={onPassBlur} />
+				<input
+					type="password"
+					value={passwordRepeat}
+					onChange={onPassRepBlur}
+				/>
+				<button type="submit" ref={submitButtonRef}>
+					Зарегистрироваться
 				</button>
-				<p>
-					Edit <code>src/App.jsx</code> and save to test HMR
-				</p>
-				{currentYear}
-			</div>
+			</form>
 		</>
 	);
 }
