@@ -14,8 +14,9 @@ function App() {
 				/^[\w_]*$/,
 				"Неверный логин. Допустимые символы: буквы, цифры и нижнее подчёркивание"
 			)
-			.min(3, "Неверный логин. Должно быть не меньше 3 символов")
-			.max(12, "Неверный логин. Должно быть не больше 12 символов"),
+			.min(3, "Должно быть не меньше 3 символов")
+			.max(12, "Неверный логин. Должно быть не больше 12 символов")
+			.required("Введите пароль"),
 		password: yup
 			.string()
 			.matches(
@@ -24,10 +25,8 @@ function App() {
 			),
 		passwordRepeat: yup
 			.string()
-			.matches(
-				/^[\w_]*$/,
-				"Допустимые символы: буквы, цифры и нижнее подчёркивание"
-			),
+			.oneOf([yup.ref("password")], "Пароли должны совпадать")
+			.required("Повторите пароль"),
 	});
 
 	const {
@@ -37,40 +36,42 @@ function App() {
 	} = useForm({
 		defaultValues: {
 			login: "",
+			password: "",
+			passwordRepeat: "",
 		},
 		resolver: yupResolver(fieldsSchema),
 	});
+
+	const loginError = errors.login?.message;
+	const passError = errors.password?.message;
+
 	return (
 		<>
 			<form onSubmit={handleSubmit(FormData)}>
 				{loginError && <div>{loginError}</div>}
 				{passError && <div>{passError}</div>}
+				{errors.passwordRepeat && (
+					<div className="error">{errors.passwordRepeat.message}</div>
+				)}
 				<div>
 					Логин
-					<input type="text" name="login" {...register("login")} />
+					<input type="text" {...register("login")} />
 				</div>
 
 				<div>
 					Пароль
-					<input
-						name="password"
-						type="password"
-						{...password("login")}
-					/>
+					<input type="password" {...register("password")} />
 				</div>
 				<div>
 					Повтор пароля
-					<input
-						type="password"
-						name="passwordRepeat"
-						{...passwordRepeat("login")}
-					/>
+					<input type="password" {...register("passwordRepeat")} />
 				</div>
 				<button
 					type="submit"
-					ref={submitButtonRef}
 					disabled={
-						loginError || passError || password !== passwordRepeat
+						!!errors.login ||
+						!!errors.password ||
+						!!errors.passwordRepeat
 					}
 				>
 					Зарегистрироваться
