@@ -21,30 +21,43 @@ function App() {
 		} else if (target.value.length > 12) {
 			error = "Должно быть не больше 12 символов";
 		}
+		setLoginError(error);
 	};
 
-	const onPassBlur = ({ target }) => {
+	const onPassChange = ({ target }) => {
 		setPassword(target.value);
-
 		if (!/^[\w]*$/.test(target.value)) {
-			error = "Допустимые символы: буквы, цифры";
+			setError("Допустимые символы: буквы, цифры");
+		} else {
+			setError(null);
 		}
-		setError(null);
 	};
 
-	const onPassRepBlur = ({ target }) => {
-		setPasswordRepeat(target.value);
-		setError(null);
+	const onPassRepChange = ({ target }) => {
+		const newPasswordRepeat = target.value;
+		setPasswordRepeat(newPasswordRepeat);
+
+		if (newPasswordRepeat === password && newPasswordRepeat.length > 0) {
+			setTimeout(() => {
+				submitButtonRef.current?.focus();
+			}, 0);
+			setError(null);
+		} else if (newPasswordRepeat.length > 0 && password.length > 0) {
+			setError("Пароли не совпадают");
+		} else {
+			setError(null);
+		}
 	};
 
 	function onSubmit(event) {
 		event.preventDefault();
 
-		if (password === passwordRepeat) {
+		if (!loginError && !passError && password === passwordRepeat) {
 			console.log({ login }, { password }, { passwordRepeat });
 		} else {
-			error = "не подходят пароли";
-			setError(error);
+			if (password !== passwordRepeat && !passError) {
+				setError("Пароли не совпадают");
+			}
 		}
 	}
 
@@ -53,14 +66,34 @@ function App() {
 			<form onSubmit={onSubmit}>
 				{loginError && <div>{loginError}</div>}
 				{passError && <div>{passError}</div>}
-				<input type="text" value={login} onChange={onLoginChange} />
-				<input type="password" value={password} onChange={onPassBlur} />
-				<input
-					type="password"
-					value={passwordRepeat}
-					onChange={onPassRepBlur}
-				/>
-				<button type="submit" ref={submitButtonRef}>
+				<div>
+					Логин
+					<input type="text" value={login} onChange={onLoginChange} />
+				</div>
+
+				<div>
+					Пароль
+					<input
+						type="password"
+						value={password}
+						onChange={onPassChange}
+					/>
+				</div>
+				<div>
+					Повтор пароля
+					<input
+						type="password"
+						value={passwordRepeat}
+						onChange={onPassRepChange}
+					/>
+				</div>
+				<button
+					type="submit"
+					ref={submitButtonRef}
+					disabled={
+						loginError || passError || password !== passwordRepeat
+					}
+				>
 					Зарегистрироваться
 				</button>
 			</form>
